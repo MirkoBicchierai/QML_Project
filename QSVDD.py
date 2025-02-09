@@ -5,7 +5,7 @@ from sklearn.metrics import accuracy_score, roc_curve, roc_auc_score
 from tqdm import tqdm
 import numpy as np
 from ModelQSVDD import QSVDDModel
-from common_function import auc_plot, data, plot_tensor
+from common_function import auc_plot, data, plot_tensor, plot_quantum_sphere
 
 
 def qsvdd_loss(y, predictions):
@@ -54,11 +54,17 @@ def test(target_class, latent_dim, test_dataloader, train_dataloader, model):
         print(f"Starting test function with target_class={target_class}, latent_dim={latent_dim}, elaborating c")
         y_pred = []
         y_true = []
-        c = torch.mean(torch.cat([model(inputs) for inputs, _ in train_dataloader]), dim=0)
+
+        train_set_measures = torch.cat([model(inputs) for inputs, _ in train_dataloader])
+        c = torch.mean(train_set_measures, dim=0)
         print(f"Testing on test dataset")
 
+        test_predictions = []
+        test_labels = []
         for batch_idx, (inputs, labels) in enumerate(test_dataloader):
             pred = model(inputs)
+            test_predictions.append(pred)
+            test_labels.append(labels)
             plot_tensor(inputs.squeeze())
             for j in range(len(pred)):
                 if labels[j] == target_class:
@@ -67,6 +73,8 @@ def test(target_class, latent_dim, test_dataloader, train_dataloader, model):
                 else:
                     y_pred.append(((pred[j] - c) ** 2).mean().item())
                     y_true.append(1)
+
+        plot_quantum_sphere(train_set_measures, test_predictions, test_labels, target_class)
 
         fpr, tpr, thresholds = roc_curve(np.array(y_true), np.array(y_pred))
         auc = roc_auc_score(np.array(y_true), np.array(y_pred))
@@ -93,7 +101,7 @@ def main():
     num_params_conv = 15
 
     # train loop parameters
-    epochs = 100
+    epochs = 15
     lr = 0.001
 
     model = QSVDDModel(n_layers, n_qubits, num_params_conv).to(device)

@@ -1,12 +1,13 @@
 import torch
 import torch.optim as optim
+from sklearn.decomposition import PCA
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import roc_curve, roc_auc_score
 from ModelQAE import QuantumAutoencoder
-from common_function import auc_plot, plot_tensor, data
+from common_function import auc_plot, plot_tensor, data, plot_quantum_sphere
 
 
 def qae_loss_repo(trash_q_measurements):
@@ -38,13 +39,10 @@ def train(epochs, train_loader, model, optimizer, device, input_size):
             inputs = inputs.to(device)
 
             optimizer.zero_grad()
-
             trash_q_measurements = model(inputs.view(-1, input_size))
             loss = loss_paper(trash_q_measurements)
-
             loss.backward()
             optimizer.step()
-
             total_loss += loss.item()
 
         avg_loss = total_loss / len(train_loader)
@@ -63,11 +61,19 @@ def test(target_class, latent_dim, test_dataloader, train_dataloader, model):
         print(f"Starting test function with target_class={target_class}, latent_dim={latent_dim}, elaborating c")
         y_pred = []
         y_true = []
-        c = torch.mean(torch.cat([model(inputs) for inputs, _ in train_dataloader]), dim=0)
+
+        train_set_measures = torch.cat([model(inputs) for inputs, _ in train_dataloader])
+        c = torch.mean(train_set_measures, dim=0)
+
         print(f"Testing on test dataset")
+
+        test_predictions = []
+        test_labels = []
 
         for batch_idx, (inputs, labels) in enumerate(test_dataloader):
             pred = model(inputs)
+            test_predictions.append(pred)
+            test_labels.append(labels)
             plot_tensor(inputs.squeeze())
             for j in range(len(pred)):
                 if labels[j] == target_class:
@@ -76,6 +82,8 @@ def test(target_class, latent_dim, test_dataloader, train_dataloader, model):
                 else:
                     y_pred.append(((pred[j] - c) ** 2).mean().item())
                     y_true.append(1)
+
+        plot_quantum_sphere(train_set_measures, test_predictions, test_labels, target_class)
 
         fpr, tpr, thresholds = roc_curve(np.array(y_true), np.array(y_pred))
         auc = roc_auc_score(np.array(y_true), np.array(y_pred))
@@ -104,7 +112,7 @@ def main():
     n_layers = 10
 
     # train loop parameters
-    epochs = 25
+    epochs = 15
     lr = 0.001
 
     model = QuantumAutoencoder(n_layers, n_qubits, n_trash_qubits).to(device)
