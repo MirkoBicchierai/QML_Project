@@ -87,7 +87,7 @@ def test(model, test_dataloader, target_class, c):
     return auc, fpr, tpr, accuracy
 
 def main():
-    dataset = 'mnist'
+    dataset = 'mnist' # kmnist, fmnist, cifar10
     latent_dim = 9
     epochs = 500
     learning_rate = 0.001

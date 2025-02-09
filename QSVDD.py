@@ -93,7 +93,7 @@ def main():
     input_size = 16 * 16
     batch_size = 16
     target_class, train_samples, test_samples_target, test_samples_other = 0, 600, 100, 10
-    dataset_name = 'mnist'  # kmnist, fmnist
+    dataset_name = 'mnist'  # kmnist, fmnist, cifar10
 
     # model parameters
     latent_dim = 9  # pauli observable

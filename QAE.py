@@ -1,6 +1,5 @@
 import torch
 import torch.optim as optim
-from sklearn.decomposition import PCA
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 import numpy as np
@@ -37,7 +36,7 @@ def train(epochs, train_loader, model, optimizer, device, input_size):
         total_loss = 0
         for batch_idx, (inputs, _) in enumerate(train_loader):
             inputs = inputs.to(device)
-
+            print(inputs.shape)
             optimizer.zero_grad()
             trash_q_measurements = model(inputs.view(-1, input_size))
             loss = loss_paper(trash_q_measurements)
@@ -105,14 +104,14 @@ def main():
     input_size = 16 * 16
     batch_size = 16
     target_class, train_samples, test_samples_target, test_samples_other = 0, 600, 100, 10
-    dataset_name = 'mnist' # kmnist, fmnist
+    dataset_name = 'cifar10' # mnist, kmnist, fmnist, cifar10
 
     # model parameters
     latent_dim = 9  # pauli observable
     n_layers = 10
 
     # train loop parameters
-    epochs = 15
+    epochs = 2000
     lr = 0.001
 
     model = QuantumAutoencoder(n_layers, n_qubits, n_trash_qubits).to(device)

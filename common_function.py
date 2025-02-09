@@ -7,10 +7,18 @@ from torch.utils.data import DataLoader, Subset
 
 
 def select_dataset(dataset):
-    transform = transforms.Compose([
-        transforms.Resize((16, 16)),
-        transforms.ToTensor()
-    ])
+
+    if dataset == 'cifar10':
+        transform = transforms.Compose([
+            transforms.Resize((16, 16)),
+            transforms.Grayscale(num_output_channels=1),
+            transforms.ToTensor()
+        ])
+    else:
+        transform = transforms.Compose([
+            transforms.Resize((16, 16)),
+            transforms.ToTensor()
+        ])
 
     if dataset == 'mnist':
         train_dataset = datasets.MNIST(root='Dataset/', train=True, download=True, transform=transform)
@@ -24,7 +32,10 @@ def select_dataset(dataset):
         train_dataset = datasets.KMNIST(root='Dataset/', train=True, download=True, transform=transform)
         test_dataset = datasets.KMNIST(root='Dataset/', train=False, download=True, transform=transform)
         return train_dataset, test_dataset
-
+    elif dataset == 'cifar10':
+        train_dataset = datasets.CIFAR10(root='Dataset/', train=True, download=True, transform=transform)
+        test_dataset = datasets.CIFAR10(root='Dataset/', train=False, download=True, transform=transform)
+        return train_dataset, test_dataset
 
 def data(dataset, target_class, batch_size, train_samples, test_samples_target, test_samples_other):
 
