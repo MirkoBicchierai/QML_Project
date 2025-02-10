@@ -3,13 +3,14 @@ import torch.nn as nn
 import pennylane as qml
 
 class QSVDDModel(nn.Module):
-    def __init__(self, n_layers, n_qubits, num_params_conv, noise):
+    def __init__(self, n_layers, n_qubits, num_params_conv, noise, latent_dim):
         super().__init__()
         self.quantum_weights = nn.Parameter(torch.randn((n_layers*num_params_conv), dtype=torch.float32))
         print("Weights", self.quantum_weights.shape)
         self.n_qubits = n_qubits
         self.num_params_conv = num_params_conv
         self.noise = noise
+        self.latent_dim = latent_dim
 
     def forward(self, x):
         b_s = x.shape[0]
@@ -24,14 +25,14 @@ class QSVDDModel(nn.Module):
         circuit = qml.add_noise(node, noise_model=self.noise) if self.noise else node
 
         for i in range(b_s):
-            measurements = circuit(x[i].view(-1), self.quantum_weights, self.n_qubits, self.num_params_conv, self.noise)
+            measurements = circuit(x[i].view(-1), self.quantum_weights, self.n_qubits, self.num_params_conv, self.latent_dim)
             trash_measurements.append(torch.stack(measurements))
 
         return torch.stack(trash_measurements)
 
 
 
-def quantum_circuit(inputs, weights, n_qubits, num_params_conv, noise):
+def quantum_circuit(inputs, weights, n_qubits, num_params_conv, latent_dim):
 
     qml.AmplitudeEmbedding(inputs, wires=range(n_qubits), normalize=True)
 
@@ -41,11 +42,35 @@ def quantum_circuit(inputs, weights, n_qubits, num_params_conv, noise):
     conv_layer_2(U_SU4, weights[3 * num_params_conv: 4 * num_params_conv])
     conv_layer_3(U_SU4, weights[4 * num_params_conv: 5 * num_params_conv])
 
-    # Measurements
-    result = [qml.expval(qml.PauliX(2)), qml.expval(qml.PauliY(2)), qml.expval(qml.PauliZ(2)),
-              qml.expval(qml.PauliX(6)), qml.expval(qml.PauliY(6)), qml.expval(qml.PauliZ(6)),
-              qml.expval(qml.PauliX(2) @ qml.PauliX(6)), qml.expval(qml.PauliY(2) @ qml.PauliY(6)),
-              qml.expval(qml.PauliZ(2) @ qml.PauliZ(6))]
+    result = []
+    if latent_dim == 1:
+        result = [qml.expval(qml.PauliZ(6))]
+    elif latent_dim == 3:
+        result = [qml.expval(qml.PauliX(2)), qml.expval(qml.PauliY(2)), qml.expval(qml.PauliZ(2))]
+    elif latent_dim == 6:
+        result = [qml.expval(qml.PauliX(2)), qml.expval(qml.PauliY(2)), qml.expval(qml.PauliZ(2)),
+                  qml.expval(qml.PauliX(6)), qml.expval(qml.PauliY(6)), qml.expval(qml.PauliZ(6))]
+    elif latent_dim == 9:
+        result = [qml.expval(qml.PauliX(2)), qml.expval(qml.PauliY(2)), qml.expval(qml.PauliZ(2)),
+                  qml.expval(qml.PauliX(6)), qml.expval(qml.PauliY(6)), qml.expval(qml.PauliZ(6)),
+                  qml.expval(qml.PauliX(2) @ qml.PauliX(6)), qml.expval(qml.PauliY(2) @ qml.PauliY(6)),
+                  qml.expval(qml.PauliZ(2) @ qml.PauliZ(6))]
+    elif latent_dim == 12:
+        result = [qml.expval(qml.PauliX(2)), qml.expval(qml.PauliY(2)), qml.expval(qml.PauliZ(2)),
+                  qml.expval(qml.PauliX(6)), qml.expval(qml.PauliY(6)), qml.expval(qml.PauliZ(6)),
+                  qml.expval(qml.PauliX(2) @ qml.PauliX(6)), qml.expval(qml.PauliY(2) @ qml.PauliY(6)),
+                  qml.expval(qml.PauliZ(2) @ qml.PauliZ(6)),
+                  qml.expval(qml.PauliX(2) @ qml.PauliY(6)), qml.expval(qml.PauliY(2) @ qml.PauliZ(6)),
+                  qml.expval(qml.PauliZ(2) @ qml.PauliX(6))]
+    elif latent_dim == 15:
+        result = [qml.expval(qml.PauliX(2)), qml.expval(qml.PauliY(2)), qml.expval(qml.PauliZ(2)),
+                  qml.expval(qml.PauliX(6)), qml.expval(qml.PauliY(6)), qml.expval(qml.PauliZ(6)),
+                  qml.expval(qml.PauliX(2) @ qml.PauliX(6)), qml.expval(qml.PauliY(2) @ qml.PauliY(6)),
+                  qml.expval(qml.PauliZ(2) @ qml.PauliZ(6)),
+                  qml.expval(qml.PauliX(2) @ qml.PauliY(6)), qml.expval(qml.PauliY(2) @ qml.PauliZ(6)),
+                  qml.expval(qml.PauliZ(2) @ qml.PauliX(6)),
+                  qml.expval(qml.PauliX(2) @ qml.PauliZ(6)), qml.expval(qml.PauliY(2) @ qml.PauliX(6)),
+                  qml.expval(qml.PauliZ(2) @ qml.PauliY(6))]
 
     return result
 

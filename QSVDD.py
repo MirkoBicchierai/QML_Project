@@ -26,18 +26,12 @@ def train(epochs, train_dataloader, model, optimizer, device, input_size):
     for epoch in tqdm(range(epochs)):
         total_loss = 0
         for batch_idx, (inputs, labels) in enumerate(train_dataloader):
-            inputs = inputs.to(device)
-            labels = labels.to(device)
-
+            inputs, labels = inputs.to(device), labels.to(device)
             optimizer.zero_grad()
-
             measurements = model(inputs.view(-1, input_size))
-
             loss = qsvdd_loss(labels, measurements)
-
             loss.backward()
             optimizer.step()
-
             total_loss += loss.item()
 
         avg_loss = total_loss / len(train_dataloader)
@@ -97,7 +91,7 @@ def main():
     dataset_name = 'mnist'  # kmnist, fmnist, cifar10
 
     # model parameters
-    latent_dim = 9  # pauli observable
+    latent_dim = 9  # pauli observable 1,3,6,9,12,15
     n_layers = 5
     num_params_conv = 15
 
@@ -105,12 +99,11 @@ def main():
     epochs = 2
     lr = 0.001
 
-    model = QSVDDModel(n_layers, n_qubits, num_params_conv, noise = None).to(device)
+    model = QSVDDModel(n_layers, n_qubits, num_params_conv, noise = None, latent_dim = latent_dim).to(device)
     model = model.float()
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
-    train_dataloader, test_dataloader = data(dataset_name, target_class, batch_size, train_samples, test_samples_target,
-                                             test_samples_other)
+    train_dataloader, test_dataloader = data(dataset_name, target_class, batch_size, train_samples, test_samples_target, test_samples_other)
 
     loss_history, param_history = train(epochs, train_dataloader, model, optimizer, device, input_size)
 
@@ -148,4 +141,6 @@ def main():
     auc_plot(auc, fpr, tpr)
 
 if __name__ == "__main__":
+    # mnist, kmnist, fmnist, cifar10
+    # latent_dim <- 3, 6, 9, 12, 15
     main()

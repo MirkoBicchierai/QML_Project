@@ -101,7 +101,7 @@ def data(dataset, target_class, batch_size, train_samples, test_samples_target, 
     return train_loader, test_loader
 
 
-def auc_plot(auc, fpr, tpr):
+def auc_plot(auc, fpr, tpr, path):
     print(f"AUC: {auc:.4f}")
 
     plt.figure()
@@ -114,7 +114,8 @@ def auc_plot(auc, fpr, tpr):
     plt.ylabel("True Positive Rate")
     plt.title("ROC Curve")
     plt.legend(loc="lower right")
-    plt.show()
+    plt.savefig(path)
+    plt.close()
 
 
 def plot_tensor(tensor):
@@ -148,7 +149,7 @@ def plot_tensor(tensor):
     plt.show()
 
 
-def plot_quantum_sphere(train_measures, test_measures, test_labels, target_class):
+def plot_quantum_sphere(train_measures, test_measures, test_labels, target_class, path):
     train_np = train_measures.cpu().numpy()
     test_measures = torch.cat(test_measures)
     test_labels = torch.cat(test_labels)
@@ -163,16 +164,16 @@ def plot_quantum_sphere(train_measures, test_measures, test_labels, target_class
     combined_projected = pca.fit_transform(combined_data)
     train_projected = combined_projected[:len(train_np)]
     test_projected = combined_projected[len(train_np):]
-    pca2_plot(train_projected, test_projected, target_mask, pca, target_class)
+    pca2_plot(train_projected, test_projected, target_mask, pca, target_class, path+"2Dpca_"+str(target_class)+".pdf")
 
     pca = PCA(n_components=3)
     combined_projected = pca.fit_transform(combined_data)
     train_projected = combined_projected[:len(train_np)]
     test_projected = combined_projected[len(train_np):]
-    pca3_plot(train_projected, test_projected, target_mask, pca, target_class)
+    pca3_plot(train_projected, test_projected, target_mask, pca, target_class, path+"3Dpca_"+str(target_class)+".pdf")
 
 
-def pca2_plot(train_projected, test_projected, target_mask, pca, target_class):
+def pca2_plot(train_projected, test_projected, target_mask, pca, target_class, path):
     plt.figure(figsize=(10, 8))
 
     plt.scatter(train_projected[:, 0],
@@ -199,10 +200,11 @@ def pca2_plot(train_projected, test_projected, target_mask, pca, target_class):
     plt.title('Quantum Measurements Projected to 2D')
     plt.legend()
     plt.grid(True)
-    plt.show()
+    plt.savefig(path)
+    plt.close()
 
 
-def pca3_plot(train_projected, test_projected, target_mask, pca, target_class):
+def pca3_plot(train_projected, test_projected, target_mask, pca, target_class, path):
     fig = plt.figure(figsize=(12, 8))
     ax = fig.add_subplot(111, projection='3d')
 
@@ -234,21 +236,14 @@ def pca3_plot(train_projected, test_projected, target_mask, pca, target_class):
     plt.title(f'Quantum Measurements 3D (Target Class: {target_class})')
     plt.legend()
     ax.grid(True)
-    plt.show()
+    plt.savefig(path)
+    plt.close()
 
-
-def plot_loss(loss_history):
-    plt.style.use('default')
-    plt.plot(loss_history)
-    plt.xlabel("Iterations")
-    plt.ylabel("Loss")
-    plt.title("Loss convergence")
-    plt.show()
-
-def plot_parameters(param_history):
+def plot_parameters(param_history, path, d, c):
     for i in range(param_history.shape[1]):
         plt.plot(param_history[:, i], label=f'Param {i}')
-    plt.xlabel("Iterations")
+    plt.xlabel("Epochs")
     plt.ylabel("Parameters")
-    plt.title("Parameters convergence")
-    plt.show()
+    plt.title("Parameters convergence - " + d + " - " + str(c))
+    plt.savefig(path)
+    plt.close()
