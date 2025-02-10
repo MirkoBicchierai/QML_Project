@@ -5,7 +5,8 @@ from sklearn.metrics import accuracy_score, roc_curve, roc_auc_score
 from tqdm import tqdm
 import numpy as np
 from ModelQSVDD import QSVDDModel
-from common_function import auc_plot, data, plot_tensor, plot_quantum_sphere
+from common_function import auc_plot, data, plot_tensor, plot_quantum_sphere, plot_loss, plot_parameters
+from noise import noise_model
 
 
 def qsvdd_loss(y, predictions):
@@ -55,7 +56,7 @@ def test(target_class, latent_dim, test_dataloader, train_dataloader, model):
         y_pred = []
         y_true = []
 
-        train_set_measures = torch.cat([model(inputs) for inputs, _ in train_dataloader])
+        train_set_measures = torch.cat([model(inputs) for inputs, _ in tqdm(train_dataloader)])
         c = torch.mean(train_set_measures, dim=0)
         print(f"Testing on test dataset")
 
@@ -101,10 +102,10 @@ def main():
     num_params_conv = 15
 
     # train loop parameters
-    epochs = 15
+    epochs = 2
     lr = 0.001
 
-    model = QSVDDModel(n_layers, n_qubits, num_params_conv).to(device)
+    model = QSVDDModel(n_layers, n_qubits, num_params_conv, noise = None).to(device)
     model = model.float()
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
@@ -115,19 +116,23 @@ def main():
 
     torch.save(model, 'Models/QSVDD.pth')
 
-    plt.style.use('default')
-    plt.plot(loss_history)
-    plt.xlabel("Iterations")
-    plt.ylabel("Loss")
-    plt.title("Loss convergence")
-    plt.show()
+    plot_loss(loss_history)
+    plot_parameters(param_history)
 
-    for i in range(param_history.shape[1]):
-        plt.plot(param_history[:, i], label=f'Param {i}')
-    plt.xlabel("Iterations")
-    plt.ylabel("Parameters")
-    plt.title("Parameters convergence")
-    plt.show()
+    auc, y_pred, y_true, fpr, tpr, thresholds = test(target_class, latent_dim, test_dataloader, train_dataloader, model)
+
+    # Find optimal threshold using Youden's J statistic
+    optimal_idx = np.argmax(tpr - fpr)
+    optimal_threshold = thresholds[optimal_idx]
+
+    binary_pred = [1 if d >= optimal_threshold else 0 for d in y_pred]
+    accuracy = accuracy_score(y_true, binary_pred)
+
+    print(f"Best accuracy: {accuracy:.2%}")
+
+    auc_plot(auc, fpr, tpr)
+
+    model.noise = noise_model()
 
     auc, y_pred, y_true, fpr, tpr, thresholds = test(target_class, latent_dim, test_dataloader, train_dataloader, model)
 

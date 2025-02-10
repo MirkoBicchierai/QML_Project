@@ -7,7 +7,6 @@ from torch.utils.data import DataLoader, Subset
 
 
 def select_dataset(dataset):
-
     if dataset == 'cifar10':
         transform = transforms.Compose([
             transforms.Resize((16, 16)),
@@ -37,11 +36,10 @@ def select_dataset(dataset):
         test_dataset = datasets.CIFAR10(root='Dataset/', train=False, download=True, transform=transform)
         return train_dataset, test_dataset
 
-def data(dataset, target_class, batch_size, train_samples, test_samples_target, test_samples_other):
 
+def data(dataset, target_class, batch_size, train_samples, test_samples_target, test_samples_other):
     train_dataset, test_dataset = select_dataset(dataset)
 
-    # Convert targets to numpy arrays for easier indexing
     train_targets = np.array(train_dataset.targets)
     test_targets = np.array(test_dataset.targets)
 
@@ -102,6 +100,7 @@ def data(dataset, target_class, batch_size, train_samples, test_samples_target, 
 
     return train_loader, test_loader
 
+
 def auc_plot(auc, fpr, tpr):
     print(f"AUC: {auc:.4f}")
 
@@ -116,6 +115,7 @@ def auc_plot(auc, fpr, tpr):
     plt.title("ROC Curve")
     plt.legend(loc="lower right")
     plt.show()
+
 
 def plot_tensor(tensor):
     if torch.is_tensor(tensor):
@@ -147,8 +147,8 @@ def plot_tensor(tensor):
     plt.tight_layout()
     plt.show()
 
-def plot_quantum_sphere(train_measures, test_measures, test_labels, target_class):
 
+def plot_quantum_sphere(train_measures, test_measures, test_labels, target_class):
     train_np = train_measures.cpu().numpy()
     test_measures = torch.cat(test_measures)
     test_labels = torch.cat(test_labels)
@@ -171,32 +171,28 @@ def plot_quantum_sphere(train_measures, test_measures, test_labels, target_class
     test_projected = combined_projected[len(train_np):]
     pca3_plot(train_projected, test_projected, target_mask, pca, target_class)
 
-def pca2_plot(train_projected, test_projected, target_mask, pca, target_class):
 
+def pca2_plot(train_projected, test_projected, target_mask, pca, target_class):
     plt.figure(figsize=(10, 8))
 
-    # Plot training points in blue
     plt.scatter(train_projected[:, 0],
                 train_projected[:, 1],
                 c='blue',
                 alpha=0.6,
                 label='Training Set')
 
-    # Plot target class points in green
     plt.scatter(test_projected[target_mask, 0],
                 test_projected[target_mask, 1],
                 c='green',
                 alpha=0.6,
                 label=f'Test Set (Class {target_class})')
 
-    # Plot other class points in red
     plt.scatter(test_projected[~target_mask, 0],
                 test_projected[~target_mask, 1],
                 c='red',
                 alpha=0.6,
                 label='Test Set (Other Classes)')
 
-    # Set labels
     plt.xlabel(f'PC1 ({pca.explained_variance_ratio_[0]:.2%} variance)')
     plt.ylabel(f'PC2 ({pca.explained_variance_ratio_[1]:.2%} variance)')
 
@@ -205,36 +201,32 @@ def pca2_plot(train_projected, test_projected, target_mask, pca, target_class):
     plt.grid(True)
     plt.show()
 
-def pca3_plot(train_projected, test_projected, target_mask, pca, target_class):
 
+def pca3_plot(train_projected, test_projected, target_mask, pca, target_class):
     fig = plt.figure(figsize=(12, 8))
     ax = fig.add_subplot(111, projection='3d')
 
-    # Plot training points in blue
     ax.scatter(train_projected[:, 0],
-              train_projected[:, 1],
-              train_projected[:, 2],
-              c='blue',
-              alpha=0.6,
-              label='Training Set')
+               train_projected[:, 1],
+               train_projected[:, 2],
+               c='blue',
+               alpha=0.6,
+               label='Training Set')
 
-    # Plot target class points in green
     ax.scatter(test_projected[target_mask, 0],
-              test_projected[target_mask, 1],
-              test_projected[target_mask, 2],
-              c='green',
-              alpha=0.6,
-              label=f'Test Set (Class {target_class})')
+               test_projected[target_mask, 1],
+               test_projected[target_mask, 2],
+               c='green',
+               alpha=0.6,
+               label=f'Test Set (Class {target_class})')
 
-    # Plot other class points in red
     ax.scatter(test_projected[~target_mask, 0],
-              test_projected[~target_mask, 1],
-              test_projected[~target_mask, 2],
-              c='red',
-              alpha=0.6,
-              label='Test Set (Other Classes)')
+               test_projected[~target_mask, 1],
+               test_projected[~target_mask, 2],
+               c='red',
+               alpha=0.6,
+               label='Test Set (Other Classes)')
 
-    # Set labels
     ax.set_xlabel(f'PC1 ({pca.explained_variance_ratio_[0]:.2%} variance)')
     ax.set_ylabel(f'PC2 ({pca.explained_variance_ratio_[1]:.2%} variance)')
     ax.set_zlabel(f'PC3 ({pca.explained_variance_ratio_[2]:.2%} variance)')
@@ -242,4 +234,21 @@ def pca3_plot(train_projected, test_projected, target_mask, pca, target_class):
     plt.title(f'Quantum Measurements 3D (Target Class: {target_class})')
     plt.legend()
     ax.grid(True)
+    plt.show()
+
+
+def plot_loss(loss_history):
+    plt.style.use('default')
+    plt.plot(loss_history)
+    plt.xlabel("Iterations")
+    plt.ylabel("Loss")
+    plt.title("Loss convergence")
+    plt.show()
+
+def plot_parameters(param_history):
+    for i in range(param_history.shape[1]):
+        plt.plot(param_history[:, i], label=f'Param {i}')
+    plt.xlabel("Iterations")
+    plt.ylabel("Parameters")
+    plt.title("Parameters convergence")
     plt.show()

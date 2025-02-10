@@ -6,7 +6,8 @@ import numpy as np
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import roc_curve, roc_auc_score
 from ModelQAE import QuantumAutoencoder
-from common_function import auc_plot, plot_tensor, data, plot_quantum_sphere
+from common_function import auc_plot, plot_tensor, data, plot_quantum_sphere, plot_loss, plot_parameters
+from noise import noise_model
 
 
 def qae_loss_repo(trash_q_measurements):
@@ -36,7 +37,6 @@ def train(epochs, train_loader, model, optimizer, device, input_size):
         total_loss = 0
         for batch_idx, (inputs, _) in enumerate(train_loader):
             inputs = inputs.to(device)
-            print(inputs.shape)
             optimizer.zero_grad()
             trash_q_measurements = model(inputs.view(-1, input_size))
             loss = loss_paper(trash_q_measurements)
@@ -61,7 +61,7 @@ def test(target_class, latent_dim, test_dataloader, train_dataloader, model):
         y_pred = []
         y_true = []
 
-        train_set_measures = torch.cat([model(inputs) for inputs, _ in train_dataloader])
+        train_set_measures = torch.cat([model(inputs) for inputs, _ in tqdm(train_dataloader)])
         c = torch.mean(train_set_measures, dim=0)
 
         print(f"Testing on test dataset")
@@ -104,17 +104,17 @@ def main():
     input_size = 16 * 16
     batch_size = 16
     target_class, train_samples, test_samples_target, test_samples_other = 0, 600, 100, 10
-    dataset_name = 'cifar10' # mnist, kmnist, fmnist, cifar10
+    dataset_name = 'fmnist' # mnist, kmnist, fmnist, cifar10
 
     # model parameters
     latent_dim = 9  # pauli observable
-    n_layers = 10
+    n_layers = 3
 
     # train loop parameters
-    epochs = 2000
+    epochs = 5
     lr = 0.001
 
-    model = QuantumAutoencoder(n_layers, n_qubits, n_trash_qubits).to(device)
+    model = QuantumAutoencoder(n_layers, n_qubits, n_trash_qubits, noise = None).to(device)
     model = model.float()
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
@@ -124,19 +124,23 @@ def main():
 
     torch.save(model, 'Models/QAE.pth')
 
-    plt.style.use('default')
-    plt.plot(loss_history)
-    plt.xlabel("Iterations")
-    plt.ylabel("Loss")
-    plt.title("Loss convergence")
-    plt.show()
+    plot_loss(loss_history)
+    plot_parameters(param_history)
 
-    for i in range(param_history.shape[1]):
-        plt.plot(param_history[:, i], label=f'Param {i}')
-    plt.xlabel("Iterations")
-    plt.ylabel("Parameters")
-    plt.title("Parameters convergence")
-    plt.show()
+    auc, y_pred, y_true, fpr, tpr, thresholds = test(target_class, latent_dim, test_dataloader, train_dataloader, model)
+
+    # Find optimal threshold using Youden's J statistic
+    optimal_idx = np.argmax(tpr - fpr)
+    optimal_threshold = thresholds[optimal_idx]
+
+    binary_pred = [1 if d >= optimal_threshold else 0 for d in y_pred]
+    accuracy = accuracy_score(y_true, binary_pred)
+
+    print(f"Best accuracy: {accuracy:.2%}")
+
+    auc_plot(auc, fpr, tpr)
+
+    model.noise = noise_model()
 
     auc, y_pred, y_true, fpr, tpr, thresholds = test(target_class, latent_dim, test_dataloader, train_dataloader, model)
 

@@ -2,30 +2,36 @@ import torch
 import torch.nn as nn
 import pennylane as qml
 
-n_qubits = 8
-dev = qml.device("lightning.qubit", wires=n_qubits)
-
 class QSVDDModel(nn.Module):
-    def __init__(self, n_layers, n_qubits, num_params_conv):
+    def __init__(self, n_layers, n_qubits, num_params_conv, noise):
         super().__init__()
         self.quantum_weights = nn.Parameter(torch.randn((n_layers*num_params_conv), dtype=torch.float32))
         print("Weights", self.quantum_weights.shape)
         self.n_qubits = n_qubits
         self.num_params_conv = num_params_conv
+        self.noise = noise
 
     def forward(self, x):
         b_s = x.shape[0]
         trash_measurements = []
 
+        if self.noise:
+            dev = qml.device("default.mixed", wires=self.n_qubits)
+        else:
+            dev = qml.device("lightning.qubit", wires=self.n_qubits)
+
+        node = qml.QNode(quantum_circuit, dev, interface="torch")
+        circuit = qml.add_noise(node, noise_model=self.noise) if self.noise else node
+
         for i in range(b_s):
-            measurements = quantum_circuit(x[i].view(-1), self.quantum_weights, self.n_qubits, self.num_params_conv)
+            measurements = circuit(x[i].view(-1), self.quantum_weights, self.n_qubits, self.num_params_conv, self.noise)
             trash_measurements.append(torch.stack(measurements))
 
         return torch.stack(trash_measurements)
 
 
-@qml.qnode(dev, interface="torch") # , diff_method = 'backprop'
-def quantum_circuit(inputs, weights, n_qubits, num_params_conv):
+
+def quantum_circuit(inputs, weights, n_qubits, num_params_conv, noise):
 
     qml.AmplitudeEmbedding(inputs, wires=range(n_qubits), normalize=True)
 
