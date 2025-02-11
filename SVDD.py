@@ -1,6 +1,9 @@
+import comet_ml
 import numpy as np
 import torch
 from torchsummary import summary
+from tqdm import tqdm
+
 from ModelSVDD import SVDD
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, roc_auc_score, accuracy_score
@@ -21,35 +24,29 @@ def initialize_center_c(dataloader, model):
     model.train()
     return center
 
-def train(model, optimizer,train_dataloader, epochs, c):
+
+def train(model, optimizer, train_dataloader, epochs, dataset, exp):
     loss_history = []
-    for epoch in range(epochs):
-        data = next(iter(train_dataloader))
-        inputs, _ = data
-        inputs = inputs.cuda()
-        optimizer.zero_grad()
+    c = initialize_center_c(train_dataloader, model)
+    for epoch in tqdm(range(epochs)):
+        total_loss = 0
+        for batch_idx, (inputs, _) in enumerate(train_dataloader):
+            inputs = inputs.cuda()
+            optimizer.zero_grad()
+            outputs = model(inputs)
+            loss = torch.mean(torch.sum((outputs - c) ** 2, dim=1))
+            loss.backward()
+            optimizer.step()
+            total_loss += loss.item()
 
-        if c is None:
-            c = initialize_center_c(train_dataloader, model)
+        avg_loss = total_loss / len(train_dataloader)
+        loss_history.append(avg_loss)
 
-        outputs = model(inputs)
-        loss = torch.mean(torch.sum((outputs - c) ** 2, dim=1))
+        print(f'Epoch {epoch} - Train loss: {avg_loss:.4f}')
+        exp.log_metric('SVDD ' + dataset + ' - Train Loss', avg_loss, step=epoch)
 
-        """ 
-        l2_reg = torch.tensor(0., device=inputs.device)
-        for param in model.parameters():
-            l2_reg += torch.norm(param)
-        loss += 0.001 * l2_reg
-        """
-
-        loss.backward()
-        optimizer.step()
-
-        loss_history.append(loss.item())
-
-        if epoch % 10 == 0:
-            print('Step: {} | Loss: {:.6f}'.format(epoch, loss.data))
     return c, loss_history
+
 
 def test(model, test_dataloader, target_class, c):
     y_true = []
@@ -86,37 +83,46 @@ def test(model, test_dataloader, target_class, c):
 
     return auc, fpr, tpr, accuracy
 
-def main():
-    dataset = 'mnist' # kmnist, fmnist, cifar10
-    latent_dim = 9
-    epochs = 500
+
+def main(target, dataset, lat_dim, base_path, exp):
+    dataset = dataset
+    latent_dim = lat_dim
+    epochs = 50
     learning_rate = 0.001
     batch_size = 16
     weight_decay = 0.001
-    c = None
-    target_class, train_samples, test_samples_target, test_samples_other = 0, 600, 100, 10
 
-    train_dataloader, test_dataloader  = data(dataset,target_class, batch_size, train_samples, test_samples_target, test_samples_other)
+    target_class, train_samples, test_samples_target, test_samples_other = target, 600, 100, 10
+
+    train_dataloader, test_dataloader = data(dataset, target_class, batch_size, train_samples, test_samples_target,
+                                             test_samples_other)
 
     model = SVDD(latent_dim=latent_dim).cuda()
-    summary(model, (1, 16, 16))
+    # summary(model, (1, 16, 16))
 
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
 
-    c, loss_history = train(model, optimizer, train_dataloader, epochs, c)
-
-    plt.style.use('default')
-    plt.plot(loss_history)
-    plt.xlabel("Iterations")
-    plt.ylabel("Loss")
-    plt.title("Loss convergence")
-    plt.show()
+    c, loss_history = train(model, optimizer, train_dataloader, epochs, dataset, exp)
 
     auc, fpr, tpr, accuracy = test(model, test_dataloader, target_class, c)
     print(f"Accuracy: {accuracy:.4f}")
-    print(f"AUC: {auc:.4f}")
 
-    auc_plot(auc, fpr, tpr)
+    exp.log_metric(dataset + 'SVDD Test AUC', auc)
+    exp.log_metric(dataset + 'SVDD Test Accuracy', accuracy)
+
+    auc_plot(auc, fpr, tpr, base_path + "AUC_" + str(target) + ".pdf")
+
 
 if __name__ == '__main__':
-    main()
+    comet_ml.login(api_key="S8bPmX5TXBAi6879L55Qp3eWW")
+    datasets = ["kmnist", "fmnist", "mnist", "cifar10"]
+    classes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    for d in tqdm(datasets):
+        for c in classes:
+            print("Experiment with " + d + " class " + str(c))
+            experiment_name = f"SVDD - {d}_class_{c}"
+            exp = comet_ml.Experiment(project_name="qml", auto_metric_logging=False, auto_param_logging=False)
+            exp.set_name(experiment_name)
+            parameters = {'dataset': d, 'class': c}
+            exp.log_parameters(parameters)
+            main(target=c, dataset=d, lat_dim=9, base_path="Result/SVDD/" + d + "/", exp=exp)
