@@ -159,13 +159,13 @@ def main(target, dataset, lat_dim, base_path, exp):
     print(f"Best accuracy: {accuracy:.2%}")
     exp.log_metric(dataset + 'QAE Test Accuracy with Noise', accuracy)
 
-    auc_plot(auc, fpr, tpr, base_path + "AUC_" + str(target) + ".pdf")
+    auc_plot(auc, fpr, tpr, base_path + "AUC_NOISE_" + str(target) + ".pdf")
 
 
 if __name__ == "__main__":
     comet_ml.login(api_key="S8bPmX5TXBAi6879L55Qp3eWW")
     datasets = ["kmnist", "fmnist", "mnist", "cifar10"]
-    classes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    classes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     for d in tqdm(datasets):
         for c in classes:
             print("Experiment with " + d +" class "+ str(c))
