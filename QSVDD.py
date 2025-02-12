@@ -16,6 +16,7 @@ def qsvdd_loss(y, predictions):
     loss = loss / len(y)
     return loss
 
+
 def train(epochs, train_dataloader, model, optimizer, device, input_size, exp, dataset):
     model.train()
     loss_history = []
@@ -43,6 +44,7 @@ def train(epochs, train_dataloader, model, optimizer, device, input_size, exp, d
 
     return loss_history, np.array(param_history)
 
+
 def test(target_class, latent_dim, test_dataloader, train_dataloader, model, base_path):
     model.eval()
 
@@ -61,7 +63,7 @@ def test(target_class, latent_dim, test_dataloader, train_dataloader, model, bas
             pred = model(inputs)
             test_predictions.append(pred)
             test_labels.append(labels)
-            #plot_tensor(inputs.squeeze())
+            # plot_tensor(inputs.squeeze())
             for j in range(len(pred)):
                 if labels[j] == target_class:
                     y_pred.append(((pred[j] - c) ** 2).mean().item())
@@ -79,8 +81,8 @@ def test(target_class, latent_dim, test_dataloader, train_dataloader, model, bas
 
     return auc, y_pred, y_true, fpr, tpr, thresholds
 
-def main(target, dataset, lat_dim, base_path, exp):
 
+def main(target, dataset, lat_dim, base_path, exp):
     # Constants
     n_qubits = 8
     device = "cpu"
@@ -97,23 +99,26 @@ def main(target, dataset, lat_dim, base_path, exp):
     num_params_conv = 15
 
     # train loop parameters
-    epochs = 40
+    epochs = 20
     lr = 0.001
 
-    model = QSVDDModel(n_layers, n_qubits, num_params_conv, noise = None, latent_dim = latent_dim).to(device)
+    model = QSVDDModel(n_layers, n_qubits, num_params_conv, noise=None, latent_dim=latent_dim).to(device)
     model = model.float()
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
-    train_dataloader, test_dataloader = data(dataset_name, target_class, batch_size, train_samples, test_samples_target, test_samples_other)
+    train_dataloader, test_dataloader = data(dataset_name, target_class, batch_size, train_samples, test_samples_target,
+                                             test_samples_other)
 
     loss_history, param_history = train(epochs, train_dataloader, model, optimizer, device, input_size, exp, dataset)
 
-    torch.save(model, 'Models/QSVDD_' + str(target) + '_' + str(latent_dim) +'_'+ dataset + '.pth')
+    torch.save(model, 'Models/QSVDD_' + str(target) + '_' + str(latent_dim) + '_' + dataset + '.pth')
 
-    plot_parameters(param_history, base_path + "parameters_" + str(target) + "_lat-dim_"+str(latent_dim)+".pdf", dataset, target)
+    plot_parameters(param_history, base_path + "parameters_" + str(target) + "_lat-dim_" + str(latent_dim) + ".pdf",
+                    dataset, target)
 
-    auc, y_pred, y_true, fpr, tpr, thresholds = test(target_class, latent_dim, test_dataloader, train_dataloader, model, base_path+"_lat-dim_"+str(latent_dim))
-    exp.log_metric(dataset + 'QSVDD Test AUC without Noise - latent dimension '+str(latent_dim), auc)
+    auc, y_pred, y_true, fpr, tpr, thresholds = test(target_class, latent_dim, test_dataloader, train_dataloader, model,
+                                                     base_path + "_lat-dim_" + str(latent_dim))
+    exp.log_metric(dataset + 'QSVDD Test AUC without Noise - latent dimension ' + str(latent_dim), auc)
 
     # Find optimal threshold using Youden's J statistic
     optimal_idx = np.argmax(tpr - fpr)
@@ -123,14 +128,15 @@ def main(target, dataset, lat_dim, base_path, exp):
     accuracy = accuracy_score(y_true, binary_pred)
 
     print(f"Best accuracy: {accuracy:.2%}")
-    exp.log_metric(dataset + 'QSVDD Test Accuracy without Noise - latent dimension '+str(latent_dim), accuracy)
+    exp.log_metric(dataset + 'QSVDD Test Accuracy without Noise - latent dimension ' + str(latent_dim), accuracy)
 
-    auc_plot(auc, fpr, tpr, base_path + "AUC_" + "lat-dim_"+str(latent_dim)+"_"+ str(target) + ".pdf")
+    auc_plot(auc, fpr, tpr, base_path + "AUC_" + "lat-dim_" + str(latent_dim) + "_" + str(target) + ".pdf")
 
     model.noise = noise_model()
 
-    auc, y_pred, y_true, fpr, tpr, thresholds = test(target_class, latent_dim, test_dataloader, train_dataloader, model, base_path+"_lat-dim_"+str(latent_dim)+"NOISE-")
-    exp.log_metric(dataset + 'QSVDD Test AUC with Noise - latent dimension '+str(latent_dim), auc)
+    auc, y_pred, y_true, fpr, tpr, thresholds = test(target_class, latent_dim, test_dataloader, train_dataloader, model,
+                                                     base_path + "_lat-dim_" + str(latent_dim) + "NOISE-")
+    exp.log_metric(dataset + 'QSVDD Test AUC with Noise - latent dimension ' + str(latent_dim), auc)
 
     # Find optimal threshold using Youden's J statistic
     optimal_idx = np.argmax(tpr - fpr)
@@ -140,19 +146,20 @@ def main(target, dataset, lat_dim, base_path, exp):
     accuracy = accuracy_score(y_true, binary_pred)
 
     print(f"Best accuracy: {accuracy:.2%}")
-    exp.log_metric(dataset + 'QSVDD Test Accuracy with Noise - latent dimension '+str(latent_dim), accuracy)
+    exp.log_metric(dataset + 'QSVDD Test Accuracy with Noise - latent dimension ' + str(latent_dim), accuracy)
 
-    auc_plot(auc, fpr, tpr, base_path + "AUC_NOISE_" + "lat-dim_"+str(latent_dim)+"_"+ str(target) + ".pdf")
+    auc_plot(auc, fpr, tpr, base_path + "AUC_NOISE_" + "lat-dim_" + str(latent_dim) + "_" + str(target) + ".pdf")
+
 
 if __name__ == "__main__":
     comet_ml.login(api_key="S8bPmX5TXBAi6879L55Qp3eWW")
-    datasets = ["kmnist", "fmnist", "mnist", "cifar10"]
+    datasets = ["mnist", "fmnist", "kmnist", "cifar10"]
     classes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-    latent_dimensions = [1, 3, 6, 9, 12]
+    latent_dimensions = [1, 3, 9, 12]
     for d in tqdm(datasets):
         for lat in latent_dimensions:
             for c in classes:
-                print("Experiment with " + d +" class "+ str(c)+" latent dimension " + str(lat))
+                print("Experiment with " + d + " class " + str(c) + " latent dimension " + str(lat))
                 experiment_name = f"QSVDD - {d}_class_{c}_latent_dimension_{lat}"
                 exp = comet_ml.Experiment(project_name="qml", auto_metric_logging=False, auto_param_logging=False)
                 exp.set_name(experiment_name)

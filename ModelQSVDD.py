@@ -47,9 +47,6 @@ def quantum_circuit(inputs, weights, n_qubits, num_params_conv, latent_dim):
         result = [qml.expval(qml.PauliZ(6))]
     elif latent_dim == 3:
         result = [qml.expval(qml.PauliX(2)), qml.expval(qml.PauliY(2)), qml.expval(qml.PauliZ(2))]
-    elif latent_dim == 6:
-        result = [qml.expval(qml.PauliX(2)), qml.expval(qml.PauliY(2)), qml.expval(qml.PauliZ(2)),
-                  qml.expval(qml.PauliX(6)), qml.expval(qml.PauliY(6)), qml.expval(qml.PauliZ(6))]
     elif latent_dim == 9:
         result = [qml.expval(qml.PauliX(2)), qml.expval(qml.PauliY(2)), qml.expval(qml.PauliZ(2)),
                   qml.expval(qml.PauliX(6)), qml.expval(qml.PauliY(6)), qml.expval(qml.PauliZ(6)),
