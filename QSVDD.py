@@ -72,7 +72,8 @@ def test(target_class, latent_dim, test_dataloader, train_dataloader, model, bas
                     y_pred.append(((pred[j] - c) ** 2).mean().item())
                     y_true.append(1)
 
-        plot_quantum_sphere(train_set_measures, test_predictions, test_labels, target_class, base_path)
+        if latent_dim > 1:
+            plot_quantum_sphere(train_set_measures, test_predictions, test_labels, target_class, base_path)
 
         fpr, tpr, thresholds = roc_curve(np.array(y_true), np.array(y_pred))
         auc = roc_auc_score(np.array(y_true), np.array(y_pred))
@@ -156,8 +157,8 @@ if __name__ == "__main__":
     datasets = ["mnist", "fmnist", "kmnist", "cifar10"]
     classes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     latent_dimensions = [1, 3, 9, 12]
-    for d in tqdm(datasets):
-        for lat in latent_dimensions:
+    for lat in latent_dimensions:
+        for d in tqdm(datasets):
             for c in classes:
                 print("Experiment with " + d + " class " + str(c) + " latent dimension " + str(lat))
                 experiment_name = f"QSVDD - {d}_class_{c}_latent_dimension_{lat}"
