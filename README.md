@@ -65,19 +65,30 @@ All experiments are registered with COMET ML. You can view the experiment detail
 | QAE    | 78                   |
 | QSVDD  | 75                   |
 
-## Some Results
+## Some Interesting result Results
 
-### QSVDD FMNIST
-
-#### Latent Dimension 9, Noise 3D PCA
-![QSVDD FMNIST Latent Dim 9 Noise 3D PCA](https://github.com/MirkoBicchierai/QML_Project/blob/master/Result/QSVDD/fmnist/_lat-dim_9NOISE-3Dpca_0.pdf)
-
-#### Latent Dimension 9, Noise 2D PCA
-![QSVDD FMNIST Latent Dim 9 Noise 2D PCA](https://github.com/MirkoBicchierai/QML_Project/blob/master/Result/QSVDD/fmnist/_lat-dim_9NOISE-2Dpca_0.pdf)
-
-## License
-
-This project is licensed under the [License Name] License - see the [LICENSE](LICENSE) file for details.
+| Dataset | Method | Condition | Mean AUC | Mean Accuracy |
+|---------|--------|-----------|----------|---------------|
+| MNIST   | QSVDD  | Noiseless | 78.79    | 75.57         |
+|         |        | Noise     | 70.91    | 69.10         |
+|         | QAE    | Noiseless | 74.77    | 71.80         |
+|         |        | Noise     | 61.50    | 63.26         |
+|         | DSVDD  | /         | 65.79    | 65.37         |
+| FMNIST  | QSVDD  | Noiseless | 88.54    | 83.62         |
+|         |        | Noise     | 74.99    | 72.10         |
+|         | QAE    | Noiseless | 81.01    | 78.35         |
+|         |        | Noise     | 75.17    | 74.77         |
+|         | DSVDD  | /         | 75.66    | 72.23         |
+| KMNIST  | QSVDD  | Noiseless | 66.16    | 64.44         |
+|         |        | Noise     | 57.55    | 59.53         |
+|         | QAE    | Noiseless | 60.59    | 62.25         |
+|         |        | Noise     | 53.86    | 58.03         |
+|         | DSVDD  | /         | 59.71    | 60.39         |
+| CIFAR10 | QSVDD  | Noiseless | 59.03    | 59.74         |
+|         |        | Noise     | 55.94    | 59.31         |
+|         | QAE    | Noiseless | 56.94    | 55.19         |
+|         |        | Noise     | 58.00    | 59.29         |
+|         | DSVDD  | /         | 55.80    | 57.59         |
 
 ## Acknowledgments
 
