@@ -57,7 +57,6 @@ if __name__ == '__main__':
     node = qml.add_noise(noisy_circuit, noise_model=noise_model)
     print(node())
     qml.draw_mpl(noisy_circuit)()
-
     plt.show()
 
 
