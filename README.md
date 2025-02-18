@@ -70,10 +70,10 @@ All experiments are registered with COMET ML. You can view the experiment detail
 ### QSVDD FMNIST
 
 #### Latent Dimension 9, Noise 3D PCA
-![QSVDD FMNIST Latent Dim 9 Noise 3D PCA](Result/QSVDD/fmnist/_lat-dim_9NOISE-3Dpca_0.pdf)
+![QSVDD FMNIST Latent Dim 9 Noise 3D PCA](https://github.com/MirkoBicchierai/QML_Project/blob/master/Result/QSVDD/fmnist/_lat-dim_9NOISE-3Dpca_0.pdf)
 
 #### Latent Dimension 9, Noise 2D PCA
-![QSVDD FMNIST Latent Dim 9 Noise 2D PCA](Result/QSVDD/fmnist/_lat-dim_9NOISE-2Dpca_0.pdf)
+![QSVDD FMNIST Latent Dim 9 Noise 2D PCA](https://github.com/MirkoBicchierai/QML_Project/blob/master/Result/QSVDD/fmnist/_lat-dim_9NOISE-2Dpca_0.pdf)
 
 ## License
 
