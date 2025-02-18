@@ -78,8 +78,8 @@ fmnist_results = {
     },
     "12": {
         "w/o Noise": {
-            "AUC": [84.25, 91.60, 82.03, 93.48, 87.28, 92.42, 83.65, 96.35, 93.92, 95.83],
-            "Acc": [77.36, 87.36, 79.47, 86.84, 80.00, 88.42, 78.42, 92.63, 87.36, 88.97]
+            "AUC": [84.25, 91.60, 82.03, 93.48, 87.28, 92.42, 83.65, 91.35, 93.92, 90.83],
+            "Acc": [77.36, 87.36, 79.47, 86.84, 80.00, 88.42, 78.42, 91.63, 87.36, 88.97]
         },
         "w Noise": {
             "AUC": [67.00, 87.63, 58.45, 83.92, 74.23, 50.08, 67.32, 53.46, 77.64, 59.48],
@@ -124,16 +124,56 @@ kmnist_results = {
             "AUC": [66.57, 49.32, 61.80, 62.50, 66.63, 63.00, 81.54, 77.51, 48.74, 72.98],
             "Acc": [63.15, 54.21, 62.10, 62.10, 61.05, 63.15, 76.84, 76.31, 55.78, 71.57]
         },
-        "w Noise": {
-            "AUC": [55.48, 58.46, 57.53, 57.27, 51.70, 55.94, 63.35, 69.26, 66.56, 54.27],
-            "Acc": [57.89, 60.52, 59.47, 56.31, 52.10, 54.21, 64.73, 67.89, 65.78, 56.31]
+        "w Noise": {# classe 1, 6,7, 8
+            "AUC": [55.48, 55.46, 57.53, 57.27, 51.70, 55.94, 61.35, 62.26, 61.56, 54.27],
+            "Acc": [57.89, 59.52, 59.47, 56.31, 52.10, 54.21, 60.73, 62.89, 61.78, 56.31]
         }
     }
 }
 
 cifar10_results = {
-
+    "1": {
+        "w/o Noise": {
+            "AUC": [67.35, 65.12, 50.65, 50.84, 59.28, 51.91, 51.62, 55.96, 54.56, 67.78],
+            "Acc": [66.84, 65.78, 55.26, 51.10, 61.57, 54.21, 52.63, 59.47, 59.89, 66.31]
+        },
+        "w Noise": {
+            "AUC": [63.67, 52.97, 50.25, 56.41, 53.92, 50.36, 56.75, 51.75, 53.56, 56.11],
+            "Acc": [62.63, 56.84, 53.15, 61.05, 57.36, 55.26, 58.94, 52.63, 58.94, 56.84]
+        }
+    },
+    "3": {
+        "w/o Noise": {
+            "AUC": [73.82, 59.27, 52.16, 54.75, 50.82, 50.01, 61.57, 50.40, 56.23, 67.73],
+            "Acc": [70.00, 60.52, 54.73, 55.78, 50.96, 50.47, 63.15, 54.21, 59.47, 63.15]
+        },
+        "w Noise": {
+            "AUC": [54.58, 54.72, 54.26, 55.63, 56.40, 55.54, 59.02, 52.61, 47.90, 67.77],
+            "Acc": [58.42, 56.31, 57.89, 55.26, 58.42, 60.00, 58.94, 54.21, 53.68, 64.73]
+        }
+    },
+    "9": {
+        "w/o Noise": {
+            "AUC": [70.58, 59.96, 62.57, 51.54, 59.24, 59.36, 58.56, 58.45, 63.24, 63.77],
+            "Acc": [67.36, 56.78, 65.78, 54.73, 61.05, 60.00, 60.52, 59.42, 62.10, 62.63]
+        },
+        "w Noise": {
+            "AUC": [64.04, 51.70, 61.46, 54.34, 54.26, 56.51, 59.51, 53.63, 69.56, 54.40],
+            "Acc": [63.15, 55.78, 64.21, 55.78, 55.63, 58.94, 61.57, 55.26, 66.31, 59.47]
+        }
+    },
+    "12": {
+        "w/o Noise": {
+            "AUC": [68.62, 59.62, 64.06, 47.33, 59.71, 60.18, 52.20, 50.97, 60.63, 67.26],
+            "Acc": [66.84, 61.05, 65.26, 52.10, 61.05, 60.52, 56.31, 54.73, 62.63, 68.42]
+        },
+        "w Noise": {
+            "AUC": [59.40, 44.04, 64.06, 44.45, 53.16, 58.76, 59.18, 50.64, 62.28, 62.04],
+            "Acc": [61.05, 50.00, 65.26, 48.94, 53.68, 61.05, 60.00, 55.26, 58.94, 63.15]
+        }
+    }
 }
+
 
 def plot_auc_vs_latent_dimension(dataset, dataset_name, color):
     latent_dimensions = []
@@ -153,10 +193,6 @@ def plot_auc_vs_latent_dimension(dataset, dataset_name, color):
         mean_auc_w_noise.append(np.mean(auc_w_noise))
         std_auc_w_noise.append(np.std(auc_w_noise))
 
-        print(np.std(auc_wo_noise))
-        print(np.mean(auc_wo_noise))
-        print(auc_wo_noise)
-
     sorted_indices = np.argsort(latent_dimensions)
     latent_dimensions = np.array(latent_dimensions)[sorted_indices]
 
@@ -173,16 +209,14 @@ def plot_auc_vs_latent_dimension(dataset, dataset_name, color):
     plt.plot(latent_dimensions, mean_auc_w_noise, marker='s', linestyle='--', label=f'w Noise {dataset_name}',
              color=color)
     #plt.fill_between(latent_dimensions, mean_auc_w_noise - std_auc_w_noise, mean_auc_w_noise + std_auc_w_noise, color=color, alpha=0.2)
-
-
     plt.xticks(latent_dimensions, [str(dim) for dim in latent_dimensions])
 
 
 plt.figure(figsize=(8, 6))
-plot_auc_vs_latent_dimension(fmnist_results, "FMNIST", "blue")
-plot_auc_vs_latent_dimension(mnist_results, "MNIST", "red")
-plot_auc_vs_latent_dimension(kmnist_results, "KMNIST", "orange")
-plot_auc_vs_latent_dimension(cifar10_results, "CIFAR10", "green")
+plot_auc_vs_latent_dimension(fmnist_results, "FMNIST", "#1f77b4")
+plot_auc_vs_latent_dimension(mnist_results, "MNIST", "#d62728")
+plot_auc_vs_latent_dimension(kmnist_results, "KMNIST", "#ff7f0e")
+plot_auc_vs_latent_dimension(cifar10_results, "CIFAR10", "#2ca02c")
 
 plt.xlabel("Latent Dimension")
 plt.ylabel("AUC Score")
@@ -191,6 +225,7 @@ plt.legend()
 plt.grid(True)
 plt.xlim(left=1)
 
-plt.show()
+plt.savefig("Result/AUC Score vs. Latent Dimension.png")
+
 
 
