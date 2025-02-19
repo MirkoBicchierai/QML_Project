@@ -1,6 +1,8 @@
 import torch.nn as nn
 import torch.nn.functional as F
 
+""" SVDD Model that follow the paper implementations. """
+
 class SVDD(nn.Module):
     def __init__(self, latent_dim, num_filters=2):
         super(SVDD, self).__init__()

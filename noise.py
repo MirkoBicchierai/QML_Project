@@ -5,6 +5,10 @@ import matplotlib.pyplot as plt
 single_qubit_cond = qml.noise.op_in(['X', 'Y', 'Z', 'Hadamard', 'I', 'RX', 'RY', 'RZ', 'U1', 'U2', 'U3'])
 two_qubit_cond = qml.noise.op_in(['CNOT', 'CZ', 'SWAP', 'ISWAP', 'CPhase', 'CRX', 'CRY', 'CRZ'])
 
+"""
+Error constant values get by the IBM KYIV machine.
+"""
+
 IBM_KYIV_SX_ERROR = 2.691e-4
 IBM_KYIV_CX_ERROR = 1.57e-2
 IBM_KYIV_T1 = 278.79
@@ -45,13 +49,17 @@ def noise_model():
     })
     return nm
 
+""" 
+Test circuit to check if the noise work.
+"""
+
 @qml.qnode(qml.device('default.mixed', wires=2))
 def noisy_circuit():
     qml.Hadamard(wires=0)
     qml.CNOT(wires=[0, 1])
     return qml.probs()
 
-
+"""Execute noise in the test circuit"""
 if __name__ == '__main__':
     noise_model = noise_model()
     node = qml.add_noise(noisy_circuit, noise_model=noise_model)

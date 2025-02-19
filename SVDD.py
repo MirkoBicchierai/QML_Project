@@ -1,14 +1,15 @@
 import comet_ml
 import numpy as np
 import torch
-from torchsummary import summary
 from tqdm import tqdm
-
 from ModelSVDD import SVDD
-import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, roc_auc_score, accuracy_score
 from common_function import auc_plot, data
 
+"""
+Function to initialize the center c before training.
+Returns the center.
+"""
 
 def initialize_center_c(dataloader, model):
     model.eval()
@@ -24,6 +25,11 @@ def initialize_center_c(dataloader, model):
     model.train()
     return center
 
+"""
+Train function that train the QSVDD Model for 'epochs' epochs.
+The center c, the loss parameter, is initialized with initialize_center_c
+Return the center c and the param history for the plot in main function. 
+"""
 
 def train(model, optimizer, train_dataloader, epochs, dataset, exp):
     loss_history = []
@@ -47,6 +53,10 @@ def train(model, optimizer, train_dataloader, epochs, dataset, exp):
 
     return c, loss_history
 
+"""
+Test function that calculates the AUC and accuracy on the test set of the selected dataset.
+Return the AUC score, Accuracy score and fpr, tpr
+"""
 
 def test(model, test_dataloader, target_class, c):
     y_true = []
@@ -83,6 +93,10 @@ def test(model, test_dataloader, target_class, c):
 
     return auc, fpr, tpr, accuracy
 
+"""
+Main function that executes a single experiment with the SVDD model.
+Takes as input the 'target' class (ranging from 0 to 9), the dataset name, and the path to save the results.
+"""
 
 def main(target, dataset, lat_dim, base_path, exp):
     dataset = dataset
@@ -112,6 +126,9 @@ def main(target, dataset, lat_dim, base_path, exp):
 
     auc_plot(auc, fpr, tpr, base_path + "AUC_" + str(target) + ".pdf")
 
+"""
+Execute all tests with the SVDD model for each dataset in ["mnist", "fmnist", "kmnist", "cifar10"].
+"""
 
 if __name__ == '__main__':
     comet_ml.login(api_key="S8bPmX5TXBAi6879L55Qp3eWW")

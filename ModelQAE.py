@@ -2,7 +2,34 @@ from itertools import combinations
 import torch
 import torch.nn as nn
 import pennylane as qml
+from matplotlib import pyplot as plt
 
+""" QAE Model that follow the paper implementations. """
+class QuantumAutoencoder(nn.Module):
+    def __init__(self, n_layers, n_qubits, n_trash_qubits, noise):
+        super().__init__()
+        self.quantum_weights = nn.Parameter(torch.randn((n_layers*n_qubits) - (n_qubits - n_trash_qubits), dtype=torch.float32))# pi -pi
+        print("Weights", self.quantum_weights.shape)
+        self.n_qubits, self.n_layers, self.n_trash_qubits = n_qubits, n_layers, n_trash_qubits
+        self.noise = noise
+
+    def forward(self, x):
+        b_s = x.shape[0]
+        trash_measurements = []
+
+        if self.noise:
+            dev = qml.device("default.mixed", wires=self.n_qubits)
+        else:
+            dev = qml.device("lightning.qubit", wires=self.n_qubits)
+
+        node = qml.QNode(quantum_circuit, dev, interface="torch")
+        circuit = qml.add_noise(node, noise_model=self.noise) if self.noise else node
+
+        for i in range(b_s):
+            measurements = circuit(x[i].view(-1), self.quantum_weights, self.n_qubits, self.n_layers, self.n_trash_qubits)
+            trash_measurements.append(torch.stack(measurements))
+
+        return torch.stack(trash_measurements)
 
 def quantum_circuit(inputs, weights, n_qubits, n_layers, n_trash_qubits):
 
@@ -23,34 +50,6 @@ def quantum_circuit(inputs, weights, n_qubits, n_layers, n_trash_qubits):
 
     return result
 
-
-class QuantumAutoencoder(nn.Module):
-    def __init__(self, n_layers, n_qubits, n_trash_qubits, noise):
-        super().__init__()
-        self.quantum_weights = nn.Parameter(torch.randn((n_layers*n_qubits) - (n_qubits - n_trash_qubits), dtype=torch.float32))# pi -pi
-        print("Weights", self.quantum_weights.shape)
-        self.n_qubits, self.n_layers, self.n_trash_qubits = n_qubits, n_layers, n_trash_qubits
-        self.noise = noise
-        # self.qlayer = qml.qnn.TorchLayer(circuit_fn, {'weights': (...)})
-
-    def forward(self, x):
-        b_s = x.shape[0]
-        trash_measurements = []
-
-        if self.noise:
-            dev = qml.device("default.mixed", wires=self.n_qubits)
-        else:
-            dev = qml.device("lightning.qubit", wires=self.n_qubits)
-
-        node = qml.QNode(quantum_circuit, dev, interface="torch")
-        circuit = qml.add_noise(node, noise_model=self.noise) if self.noise else node
-
-        for i in range(b_s):
-            measurements = circuit(x[i].view(-1), self.quantum_weights, self.n_qubits, self.n_layers, self.n_trash_qubits)
-            trash_measurements.append(torch.stack(measurements))
-
-        return torch.stack(trash_measurements)
-
 def layer(params, n_qubits, n_trash_qubits):  # params: 14
     for i in range(n_qubits):
         qml.RY(params[i], wires=i)
@@ -67,7 +66,9 @@ def last_layer(params, n_trash_qubits):
     for i in range(n_trash_qubits):
         qml.RY(params[i], wires=i)
 
-
+"""Plot the circuit to test"""
 if __name__ == '__main__':
-    print(qml.draw(quantum_circuit)(torch.ones(1, 256), torch.zeros(78), 8, 10, 6))
+
+    print(qml.draw_mpl(quantum_circuit)(torch.ones(1, 256), torch.zeros(78), 8, 10, 6))
+    plt.show()
 

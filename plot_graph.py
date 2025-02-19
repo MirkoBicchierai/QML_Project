@@ -1,6 +1,11 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
+"""
+Result obtained by the test execute on QSVDD Model (see at comet_ml link: https://www.comet.com/mirkobicchierai/qml/view/new/panels), 
+copied in a py dict to plot the result
+"""
+
 mnist_results = {
     "1": {
         "w/o Noise": {
@@ -174,7 +179,10 @@ cifar10_results = {
     }
 }
 
-
+"""
+Reads the data, computes the mean AUC, and plots the curve.
+Takes as input the dataset name, the dictionary to analyze and the color to use.
+"""
 def plot_auc_vs_latent_dimension(dataset, dataset_name, color):
     latent_dimensions = []
     mean_auc_wo_noise = []
@@ -212,20 +220,25 @@ def plot_auc_vs_latent_dimension(dataset, dataset_name, color):
     plt.xticks(latent_dimensions, [str(dim) for dim in latent_dimensions])
 
 
-plt.figure(figsize=(8, 6))
-plot_auc_vs_latent_dimension(fmnist_results, "FMNIST", "#1f77b4")
-plot_auc_vs_latent_dimension(mnist_results, "MNIST", "#d62728")
-plot_auc_vs_latent_dimension(kmnist_results, "KMNIST", "#ff7f0e")
-plot_auc_vs_latent_dimension(cifar10_results, "CIFAR10", "#2ca02c")
+""" Save the plot for each dataset in the Result Folder"""
+def main():
+    plt.figure(figsize=(8, 6))
+    plot_auc_vs_latent_dimension(fmnist_results, "FMNIST", "#1f77b4")
+    plot_auc_vs_latent_dimension(mnist_results, "MNIST", "#d62728")
+    plot_auc_vs_latent_dimension(kmnist_results, "KMNIST", "#ff7f0e")
+    plot_auc_vs_latent_dimension(cifar10_results, "CIFAR10", "#2ca02c")
 
-plt.xlabel("Latent Dimension")
-plt.ylabel("AUC Score")
-plt.title("AUC Score vs. Latent Dimension")
-plt.legend()
-plt.grid(True)
-plt.xlim(left=1)
+    plt.xlabel("Latent Dimension")
+    plt.ylabel("AUC Score")
+    plt.title("AUC Score vs. Latent Dimension")
+    plt.legend()
+    plt.grid(True)
+    plt.xlim(left=1)
 
-plt.savefig("Result/AUC Score vs. Latent Dimension.png")
+    plt.savefig("Result/AUC Score vs. Latent Dimension.png")
+    plt.savefig("Result/AUC Score vs. Latent Dimension.pdf")
 
 
+if __name__ == "__main__":
+    main()
 

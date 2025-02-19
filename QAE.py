@@ -10,22 +10,21 @@ from common_function import auc_plot, plot_tensor, data, plot_quantum_sphere, pl
 from noise import noise_model
 
 
-def qae_loss_repo(trash_q_measurements):
-    loss = 0
-    for p in trash_q_measurements:
-        loss = loss + (-torch.sum(p))
-    loss = loss / len(trash_q_measurements)
-    return loss
-
+"""
+Loss function for the QAE model implementing the loss described in the referenced paper.
+L(θ) = n ∑(j=1 to t) (1 - measurements[j])
+Each measurement is already Trace(σz ρ) from qml.expval(qml.PauliZ(i)) in the model forward
+"""
 
 def loss_paper(trash_q_measurements):
-    """
-    L(θ) = n ∑(j=1 to t) (1 - measurements[j])
-    Each measurement is already Trace(σz ρ) from qml.expval(qml.PauliZ(i)) in the model forward
-    """
+
     batch_loss = torch.sum(1 - trash_q_measurements, dim=1)  # Sum over measurements
     return torch.mean(batch_loss)
 
+"""
+Train function that train the QAE Model for 'epochs' epochs.
+return the loss history and the param history for the plot in main function. 
+"""
 
 def train(epochs, train_loader, model, optimizer, device, input_size, exp, dataset):
     model.train()
@@ -54,6 +53,12 @@ def train(epochs, train_loader, model, optimizer, device, input_size, exp, datas
 
     return loss_history, np.array(param_history)
 
+"""
+Test function that calculates the AUC and accuracy on the test set of the selected dataset in two modes: with noise and without noise.
+Save the result in the base_path folder (PCA 2D/3D Plot)
+
+Returns the AUC score, the predicted labels along with the true labels, and the thresholds of the ROC curve.
+"""
 
 def test(target_class, latent_dim, test_dataloader, train_dataloader, model, base_path):
     model.eval()
@@ -93,6 +98,10 @@ def test(target_class, latent_dim, test_dataloader, train_dataloader, model, bas
 
     return auc, y_pred, y_true, fpr, tpr, thresholds
 
+"""
+Main function that executes a single experiment with the QAE model.
+Takes as input the 'target' class (ranging from 0 to 9), the dataset name, and the path to save the results.
+"""
 
 def main(target, dataset, lat_dim, base_path, exp):
     # Constants
@@ -161,6 +170,9 @@ def main(target, dataset, lat_dim, base_path, exp):
 
     auc_plot(auc, fpr, tpr, base_path + "AUC_NOISE_" + str(target) + ".pdf")
 
+"""
+Execute all tests with the QSVDD model for each dataset in ["mnist", "fmnist", "kmnist", "cifar10"].
+"""
 
 if __name__ == "__main__":
     comet_ml.login(api_key="S8bPmX5TXBAi6879L55Qp3eWW")

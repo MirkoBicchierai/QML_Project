@@ -5,6 +5,13 @@ from sklearn.decomposition import PCA
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, Subset
 
+"""
+Function to select the dataset based on the given name.
+Takes the dataset name as input and returns two splits: one for training and one for testing.
+
+Available options: cifar10, mnist, fmnist, kmnist.
+All images are resized to 16x16, and for cifar10, a Grayscale transform is applied.
+"""
 
 def select_dataset(dataset):
     if dataset == 'cifar10':
@@ -36,6 +43,15 @@ def select_dataset(dataset):
         test_dataset = datasets.CIFAR10(root='Dataset/', train=False, download=True, transform=transform)
         return train_dataset, test_dataset
 
+
+"""
+Function to correctly split the dataset obtained from the select_dataset function.
+
+- For the training dataset: selects only train_samples from the specified target_class.
+- For the test dataset: selects test_samples from the target_class and test_samples_other from the other classes.
+
+Returns the final dataloaders: train_loader and test_loader.
+"""
 
 def data(dataset, target_class, batch_size, train_samples, test_samples_target, test_samples_other):
     train_dataset, test_dataset = select_dataset(dataset)
@@ -100,6 +116,9 @@ def data(dataset, target_class, batch_size, train_samples, test_samples_target, 
 
     return train_loader, test_loader
 
+"""
+This function plot the ROC curve 
+"""
 
 def auc_plot(auc, fpr, tpr, path):
     print(f"AUC: {auc:.4f}")
@@ -117,7 +136,9 @@ def auc_plot(auc, fpr, tpr, path):
     plt.savefig(path)
     plt.close()
 
-
+"""
+This function plot a tensor as images
+"""
 def plot_tensor(tensor):
     if torch.is_tensor(tensor):
         tensor = tensor.detach().cpu().numpy()
@@ -148,7 +169,10 @@ def plot_tensor(tensor):
     plt.tight_layout()
     plt.show()
 
-
+"""
+This function executes the PCA algorithm on the outputs from the model, with k = 2 and k = 3.
+It then calls pca2_plot and pca3_plot to plot the hypersphere of the PCA in 2D and 3D space.
+"""
 def plot_quantum_sphere(train_measures, test_measures, test_labels, target_class, path):
     train_np = train_measures.cpu().numpy()
     test_measures = torch.cat(test_measures)
@@ -172,7 +196,9 @@ def plot_quantum_sphere(train_measures, test_measures, test_labels, target_class
     test_projected = combined_projected[len(train_np):]
     pca3_plot(train_projected, test_projected, target_mask, pca, target_class, path+"3Dpca_"+str(target_class)+".pdf")
 
-
+"""
+This function plot the hypersphere of the 2D PCA and save it in the 'path' folder.
+"""
 def pca2_plot(train_projected, test_projected, target_mask, pca, target_class, path):
     plt.figure(figsize=(10, 8))
 
@@ -203,7 +229,9 @@ def pca2_plot(train_projected, test_projected, target_mask, pca, target_class, p
     plt.savefig(path)
     plt.close()
 
-
+"""
+This function plot the hypersphere of the 3D PCA and save it in the 'path' folder.
+"""
 def pca3_plot(train_projected, test_projected, target_mask, pca, target_class, path):
     fig = plt.figure(figsize=(12, 8))
     ax = fig.add_subplot(111, projection='3d')
@@ -239,6 +267,9 @@ def pca3_plot(train_projected, test_projected, target_mask, pca, target_class, p
     plt.savefig(path)
     plt.close()
 
+"""
+This function plot parameters convergence and save it in the 'path' folder.
+"""
 def plot_parameters(param_history, path, d, c):
     for i in range(param_history.shape[1]):
         plt.plot(param_history[:, i], label=f'Param {i}')
