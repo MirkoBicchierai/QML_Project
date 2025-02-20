@@ -14,7 +14,7 @@ Train function that train the QSVDD Model for 'epochs' epochs.
 return the loss history and the param history for the plot in main function. 
 """
 
-def train(epochs, train_dataloader, model, optimizer, device, input_size, exp, dataset):
+def train(epochs, train_dataloader, c, model, optimizer, device, input_size, exp, dataset):
     model.train()
     loss_history = []
     param_history = []
@@ -23,11 +23,11 @@ def train(epochs, train_dataloader, model, optimizer, device, input_size, exp, d
 
     for epoch in tqdm(range(epochs)):
         total_loss = 0
-        for batch_idx, (inputs, labels) in enumerate(train_dataloader):
-            inputs, labels = inputs.to(device), labels.to(device)
+        for batch_idx, (inputs, _) in enumerate(train_dataloader):
+            inputs = inputs.to(device)
             optimizer.zero_grad()
             measurements = model(inputs.view(-1, input_size))
-            loss = qsvdd_loss(labels, measurements)
+            loss = qsvdd_loss(c, measurements)
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
@@ -91,9 +91,9 @@ Loss function for the QSVDD model implementing the loss described in the referen
 
 def qsvdd_loss(center, predictions):
     loss = 0
-    for l, p in zip(center, predictions):
-        loss = loss + torch.sum((p - l) ** 2)
-    loss = loss / len(center)
+    for p in predictions:
+        loss = loss + torch.sum((p - center) ** 2)
+    loss = loss / len(predictions)
     return loss
 
 """
@@ -121,6 +121,8 @@ def main(target, dataset, lat_dim, base_path, exp):
     epochs = 20
     lr = 0.001
 
+    c = target_class
+
     model = QSVDDModel(n_layers, n_qubits, num_params_conv, noise=None, latent_dim=latent_dim).to(device)
     model = model.float()
     optimizer = optim.Adam(model.parameters(), lr=lr)
@@ -128,7 +130,7 @@ def main(target, dataset, lat_dim, base_path, exp):
     train_dataloader, test_dataloader = data(dataset_name, target_class, batch_size, train_samples, test_samples_target,
                                              test_samples_other)
 
-    loss_history, param_history = train(epochs, train_dataloader, model, optimizer, device, input_size, exp, dataset)
+    loss_history, param_history = train(epochs, train_dataloader, c, model, optimizer, device, input_size, exp, dataset)
 
     torch.save(model, 'Models/QSVDD_' + str(target) + '_' + str(latent_dim) + '_' + dataset + '.pth')
 
